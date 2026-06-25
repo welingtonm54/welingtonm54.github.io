@@ -283,6 +283,16 @@
     letter-spacing:.05em;
     margin:18px 0 8px;
   }
+  .lista-compras-section{margin-top:20px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;}
+  .lista-compras-section h2{font-size:15px;font-weight:700;margin:0 0 10px;color:var(--ink);}
+  .lista-compras-itens{list-style:none;margin:0 0 12px;padding:0;}
+  .lista-compras-itens li{padding:7px 0;border-bottom:1px solid var(--line);font-size:14px;display:flex;justify-content:space-between;align-items:center;}
+  .lista-compras-itens li:last-child{border-bottom:none;}
+  .lista-compras-itens .cat-badge{font-size:11px;color:var(--ink-soft);background:var(--bg);border-radius:5px;padding:2px 6px;}
+  .lista-vazia{font-size:13px;color:var(--ink-soft);text-align:center;padding:10px 0;justify-content:center !important;}
+  .btn-whatsapp{width:100%;height:50px;border-radius:12px;background:#25D366;color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;}
+  .btn-whatsapp:active{background:#1ebe5d;}
+  .btn-limpar-lista{width:100%;height:38px;border-radius:10px;background:transparent;border:1px solid var(--line);color:var(--ink-soft);font-size:13px;cursor:pointer;margin-top:6px;}
 </style>
 </head>
 <body>
@@ -316,6 +326,15 @@
   </div>
 
   <div class="stage" id="stage"></div>
+
+  <div class="lista-compras-section" id="listaComprasSection">
+    <h2>&#x1F6D2; Minha Lista de Compras</h2>
+    <ul class="lista-compras-itens" id="listaComprasItens">
+      <li class="lista-vazia">Nenhum item adicionado ainda.</li>
+    </ul>
+    <button class="btn-whatsapp" id="btnWhatsapp">Enviar via WhatsApp</button>
+    <button class="btn-limpar-lista" id="btnLimparLista">Limpar lista</button>
+  </div>
 
 </div>
 
@@ -483,15 +502,27 @@ function renderStats(){
   document.getElementById("progressFill").style.width = pct + "%";
 }
 
-function marcarComprado(id){
+function adicionarALista(id){
+  const item = INSUMOS.find(i => i.id === id);
+  if(!item) return;
+  if(!state.listaCompras) state.listaCompras = [];
+  if(!state.listaCompras.find(i => i.id === id)){
+    state.listaCompras.push({id:item.id,cat:item.cat,prod:item.prod});
+  }
   state.comprados.push(id);
   saveState();
+  renderListaCompras();
   render();
 }
 
 function desfazerUltimo(){
-  state.comprados.pop();
+  const lastId = state.comprados.pop();
+  if(lastId !== undefined){
+    if(!state.listaCompras) state.listaCompras = [];
+    state.listaCompras = state.listaCompras.filter(i => i.id !== lastId);
+  }
   saveState();
+  renderListaCompras();
   render();
 }
 
@@ -571,7 +602,7 @@ function renderStage(){
     </div>
     <div class="actions">
       <button class="btn btn-skip" id="btnSkip">Pular</button>
-      <button class="btn btn-buy" id="btnBuy">Comprado</button>
+      <button class="btn btn-buy" id="btnBuy">Comprar</button>
     </div>
     ${state.comprados.length > 0 ? '<button class="btn-undo" id="btnUndo">Desfazer última compra</button>' : ''}
   `;
@@ -610,7 +641,66 @@ document.getElementById("busca").addEventListener("input", (e) => {
   render();
 });
 
+
+function renderListaCompras(){
+  const ul = document.getElementById("listaComprasItens");
+  if(!ul) return;
+  ul.innerHTML = "";
+  const lista = state.listaCompras || [];
+  if(lista.length === 0){
+    const li = document.createElement("li");
+    li.className = "lista-vazia";
+    li.textContent = "Nenhum item adicionado ainda.";
+    ul.appendChild(li);
+    return;
+  }
+  lista.forEach(item => {
+    const li = document.createElement("li");
+    const span1 = document.createElement("span");
+    span1.textContent = item.prod;
+    const span2 = document.createElement("span");
+    span2.className = "cat-badge";
+    span2.textContent = item.cat;
+    li.appendChild(span1);
+    li.appendChild(span2);
+    ul.appendChild(li);
+  });
+}
+
+function enviarWhatsapp(){
+  const lista = state.listaCompras || [];
+  if(lista.length === 0){
+    alert("Adicione itens à lista antes de enviar.");
+    return;
+  }
+  const linhas = ["Lista de Compras - Grano Serrano", ""];
+  let catAtual = "";
+  lista.forEach(item => {
+    if(item.cat !== catAtual){
+      catAtual = item.cat;
+      linhas.push("*" + catAtual + "*");
+    }
+    linhas.push("- " + item.prod);
+  });
+  linhas.push("");
+  linhas.push("Gerado em " + new Date().toLocaleDateString("pt-BR"));
+  const msg = encodeURIComponent(linhas.join("\n"));
+  window.open("https://wa.me/?text=" + msg, "_blank");
+}
+
+document.getElementById("btnWhatsapp").onclick = enviarWhatsapp;
+
+document.getElementById("btnLimparLista").onclick = function(){
+  if(!state.listaCompras || state.listaCompras.length === 0) return;
+  if(confirm("Limpar a lista de compras?")){
+    state.listaCompras = [];
+    saveState();
+    renderListaCompras();
+  }
+};
+
 render();
+renderListaCompras();
 </script>
 </body>
 </html>
