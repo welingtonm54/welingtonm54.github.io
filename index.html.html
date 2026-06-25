@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lista de Compras — Grano Serrano</title>
+<style>
+  :root{
+    --bg:#FAF6EF;
+    --surface:#FFFFFF;
+    --ink:#2B2620;
+    --ink-soft:#6B6256;
+    --line:#E5DDCC;
+    --tomato:#C2410C;
+    --tomato-soft:#FCE8DC;
+    --basil:#3F6B3A;
+    --basil-soft:#E3EEDD;
+    --warn:#B45309;
+    --warn-soft:#FDF1DC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:16px 16px 32px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  header{
+    padding:8px 0 16px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:16px;
+  }
+  .brand{
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--tomato);
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  h1{
+    font-size:22px;
+    font-weight:600;
+    margin:0;
+    color:var(--ink);
+  }
+  .stats{
+    display:flex;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .stat{
+    flex:1;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:10px 12px;
+  }
+  .stat .num{font-size:20px;font-weight:700;line-height:1;}
+  .stat .lbl{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .progress-track{
+    height:8px;
+    background:var(--line);
+    border-radius:99px;
+    overflow:hidden;
+    margin-bottom:18px;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--basil);
+    border-radius:99px;
+    transition:width .25s ease;
+  }
+  .controls{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  input[type=text]{
+    width:100%;
+    padding:13px 14px;
+    font-size:15px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--surface);
+    color:var(--ink);
+  }
+  input[type=text]:focus{outline:2px solid var(--tomato);outline-offset:1px;}
+  .chips{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:4px;
+    -ms-overflow-style:none;
+    scrollbar-width:none;
+  }
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;
+    padding:8px 14px;
+    font-size:13px;
+    font-weight:500;
+    border-radius:99px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-soft);
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  .chip.active{
+    background:var(--tomato);
+    border-color:var(--tomato);
+    color:#fff;
+  }
+  .stage{flex:1;display:flex;flex-direction:column;justify-content:center;}
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:36px 22px;
+    text-align:center;
+    min-height:220px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:14px;
+    box-shadow:0 1px 0 rgba(0,0,0,.02);
+  }
+  .cat-pill{
+    display:inline-block;
+    align-self:center;
+    background:var(--tomato-soft);
+    color:var(--tomato);
+    font-size:12px;
+    font-weight:600;
+    padding:6px 14px;
+    border-radius:99px;
+  }
+  .prod-name{
+    font-size:28px;
+    font-weight:700;
+    color:var(--ink);
+    line-height:1.25;
+    margin:0;
+  }
+  .actions{
+    display:flex;
+    gap:12px;
+    margin-top:20px;
+  }
+  button{
+    font-family:inherit;
+    cursor:pointer;
+    border:none;
+  }
+  .btn{
+    flex:1;
+    height:60px;
+    border-radius:16px;
+    font-size:17px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+  .btn-skip{
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+  }
+  .btn-skip:active{background:var(--bg);}
+  .btn-buy{
+    background:var(--basil);
+    color:#fff;
+  }
+  .btn-buy:active{background:#345a30;}
+  .btn-reset{
+    width:100%;
+    height:56px;
+    border-radius:14px;
+    background:var(--ink);
+    color:#fff;
+    font-size:15px;
+    font-weight:600;
+    margin-top:10px;
+  }
+  .btn-undo{
+    width:100%;
+    height:44px;
+    border-radius:12px;
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    font-size:13px;
+    font-weight:500;
+    margin-top:10px;
+  }
+  .stock-row{
+    display:flex;
+    gap:8px;
+    margin-top:18px;
+  }
+  .stock-input{
+    flex:1;
+    height:48px;
+    padding:0 14px;
+    font-size:15px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  .stock-input:focus{outline:2px solid var(--basil);outline-offset:1px;}
+  .btn-save-stock{
+    width:48px;
+    height:48px;
+    border-radius:12px;
+    background:var(--ink);
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:0 0 auto;
+  }
+  .btn-save-stock:active{background:#000;}
+  .btn-save-stock svg{width:20px;height:20px;}
+  .estoque-info{
+    margin-top:8px;
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:left;
+  }
+  .estoque-info.saved{color:var(--basil);font-weight:600;}
+  .empty{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-soft);
+  }
+  .empty .big{font-size:40px;margin-bottom:8px;}
+  .empty p{font-size:15px;margin:0 0 16px;}
+  .done-list{
+    margin-top:16px;
+    max-height:280px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .done-item{
+    padding:10px 12px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:10px;
+    font-size:14px;
+    color:var(--ink-soft);
+    text-decoration:line-through;
+  }
+  .pending-item{
+    padding:10px 12px;
+    background:var(--warn-soft);
+    border-left:3px solid var(--warn);
+    border-radius:0 10px 10px 0;
+    font-size:14px;
+    color:var(--ink);
+  }
+  .section-title{
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin:18px 0 8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="brand">Grano Serrano</p>
+    <h1 id="title">Lista de compras</h1>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="num" id="statComprados">0</div>
+      <div class="lbl">Comprados</div>
+    </div>
+    <div class="stat">
+      <div class="num" id="statRestam">0</div>
+      <div class="lbl">Restam</div>
+    </div>
+    <div class="stat">
+      <div class="num" id="statPct">0%</div>
+      <div class="lbl">Concluído</div>
+    </div>
+  </div>
+
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <div class="controls">
+    <input type="text" id="busca" placeholder="Buscar produto...">
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+</div>
+
+<script>
+const INSUMOS = [
+  {id:1,cat:"Laticínios",prod:"Mussarela"},
+  {id:2,cat:"Laticínios",prod:"Cheddar cremoso"},
+  {id:3,cat:"Laticínios",prod:"Catupiry"},
+  {id:4,cat:"Laticínios",prod:"Requeijão culinário"},
+  {id:5,cat:"Laticínios",prod:"Provolone"},
+  {id:6,cat:"Laticínios",prod:"Parmesão ralado"},
+  {id:7,cat:"Laticínios",prod:"Gorgonzola"},
+  {id:8,cat:"Laticínios",prod:"Creme de leite"},
+  {id:9,cat:"Laticínios",prod:"Leite condensado"},
+  {id:10,cat:"Laticínios",prod:"Leite Ninho"},
+  {id:11,cat:"Carnes e Embutidos",prod:"Calabresa fatiada"},
+  {id:12,cat:"Carnes e Embutidos",prod:"Calabresa moída"},
+  {id:13,cat:"Carnes e Embutidos",prod:"Bacon"},
+  {id:14,cat:"Carnes e Embutidos",prod:"Presunto"},
+  {id:15,cat:"Carnes e Embutidos",prod:"Peito de peru"},
+  {id:16,cat:"Carnes e Embutidos",prod:"Lombo canadense"},
+  {id:17,cat:"Carnes e Embutidos",prod:"Carne seca"},
+  {id:18,cat:"Carnes e Embutidos",prod:"Costela bovina"},
+  {id:19,cat:"Carnes e Embutidos",prod:"Filé bovino"},
+  {id:20,cat:"Carnes e Embutidos",prod:"Coração de frango"},
+  {id:21,cat:"Carnes e Embutidos",prod:"Hambúrguer 180g"},
+  {id:22,cat:"Carnes e Embutidos",prod:"Carne smash 90g"},
+  {id:23,cat:"Carnes e Embutidos",prod:"Frango desfiado"},
+  {id:24,cat:"Carnes e Embutidos",prod:"Camarão"},
+  {id:25,cat:"Hortifruti",prod:"Tomate"},
+  {id:26,cat:"Hortifruti",prod:"Cebola"},
+  {id:27,cat:"Hortifruti",prod:"Alho"},
+  {id:28,cat:"Hortifruti",prod:"Pimentão"},
+  {id:29,cat:"Hortifruti",prod:"Alface"},
+  {id:30,cat:"Hortifruti",prod:"Brócolis"},
+  {id:31,cat:"Hortifruti",prod:"Milho"},
+  {id:32,cat:"Hortifruti",prod:"Ervilha"},
+  {id:33,cat:"Hortifruti",prod:"Palmito"},
+  {id:34,cat:"Hortifruti",prod:"Abacaxi"},
+  {id:35,cat:"Hortifruti",prod:"Banana"},
+  {id:36,cat:"Hortifruti",prod:"Morango"},
+  {id:37,cat:"Hortifruti",prod:"Manjericão"},
+  {id:38,cat:"Frituras e Acompanhamentos",prod:"Batata frita 7mm"},
+  {id:39,cat:"Frituras e Acompanhamentos",prod:"Onion rings"},
+  {id:40,cat:"Frituras e Acompanhamentos",prod:"Nuggets"},
+  {id:41,cat:"Frituras e Acompanhamentos",prod:"Palha crocante"},
+  {id:42,cat:"Frituras e Acompanhamentos",prod:"Doritos"},
+  {id:43,cat:"Frituras e Acompanhamentos",prod:"Ruffles"},
+  {id:44,cat:"Molhos e Conservas",prod:"Molho de tomate"},
+  {id:45,cat:"Molhos e Conservas",prod:"Azeitona"},
+  {id:46,cat:"Molhos e Conservas",prod:"Ovos de codorna"},
+  {id:47,cat:"Molhos e Conservas",prod:"Ovos"},
+  {id:48,cat:"Molhos e Conservas",prod:"Picles"},
+  {id:49,cat:"Molhos e Conservas",prod:"Champignon"},
+  {id:50,cat:"Molhos e Conservas",prod:"Maionese"},
+  {id:51,cat:"Molhos e Conservas",prod:"Ketchup"},
+  {id:52,cat:"Molhos e Conservas",prod:"Mostarda"},
+  {id:53,cat:"Molhos e Conservas",prod:"Barbecue"},
+  {id:54,cat:"Chocolates e Doces",prod:"Chocolate preto"},
+  {id:55,cat:"Chocolates e Doces",prod:"Chocolate branco"},
+  {id:56,cat:"Chocolates e Doces",prod:"Chocolate misto"},
+  {id:57,cat:"Chocolates e Doces",prod:"Granulado"},
+  {id:58,cat:"Chocolates e Doces",prod:"Coco ralado"},
+  {id:59,cat:"Chocolates e Doces",prod:"Doce de leite"},
+  {id:60,cat:"Chocolates e Doces",prod:"Nutella"},
+  {id:61,cat:"Chocolates e Doces",prod:"Kinder Bueno"},
+  {id:62,cat:"Chocolates e Doces",prod:"Ferrero Rocher"},
+  {id:63,cat:"Chocolates e Doces",prod:"Bis"},
+  {id:64,cat:"Chocolates e Doces",prod:"Kit Kat"},
+  {id:65,cat:"Chocolates e Doces",prod:"Oreo"},
+  {id:66,cat:"Chocolates e Doces",prod:"Marshmallow"},
+  {id:67,cat:"Padaria e Massas",prod:"Pão brioche"},
+  {id:68,cat:"Padaria e Massas",prod:"Massa de pizza"},
+  {id:69,cat:"Padaria e Massas",prod:"Farinha de trigo"},
+  {id:70,cat:"Padaria e Massas",prod:"Fermento biológico"},
+  {id:71,cat:"Embalagens",prod:"Caixa pizza 20cm"},
+  {id:72,cat:"Embalagens",prod:"Caixa pizza 25cm"},
+  {id:73,cat:"Embalagens",prod:"Caixa pizza 30cm"},
+  {id:74,cat:"Embalagens",prod:"Caixa pizza 35cm"},
+  {id:75,cat:"Embalagens",prod:"Caixa pizza 40cm"},
+  {id:76,cat:"Embalagens",prod:"Caixa pizza 45cm"},
+  {id:77,cat:"Embalagens",prod:"Caixa burger"},
+  {id:78,cat:"Embalagens",prod:"Potes 250ml"},
+  {id:79,cat:"Embalagens",prod:"Potes 500ml"},
+  {id:80,cat:"Embalagens",prod:"Sacola kraft"},
+  {id:81,cat:"Limpeza e Higiene",prod:"Detergente"},
+  {id:82,cat:"Limpeza e Higiene",prod:"Desengordurante"},
+  {id:83,cat:"Limpeza e Higiene",prod:"Álcool 70%"},
+  {id:84,cat:"Limpeza e Higiene",prod:"Luvas descartáveis"},
+  {id:85,cat:"Limpeza e Higiene",prod:"Sacos de lixo"},
+  {id:86,cat:"Temperos e Secos",prod:"Sal"},
+  {id:87,cat:"Temperos e Secos",prod:"Sal grosso"},
+  {id:88,cat:"Temperos e Secos",prod:"Açúcar"},
+  {id:89,cat:"Temperos e Secos",prod:"Óleo de soja"},
+  {id:90,cat:"Temperos e Secos",prod:"Azeite de oliva"},
+  {id:91,cat:"Temperos e Secos",prod:"Salsinha"},
+  {id:92,cat:"Temperos e Secos",prod:"Cebolinha"},
+  {id:93,cat:"Temperos e Secos",prod:"Molho de alho"},
+  {id:94,cat:"Temperos e Secos",prod:"Trigo"}
+];
+
+const STORAGE_KEY = "grano_serrano_lista_compras_v1";
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      if(!parsed.estoque) parsed.estoque = {};
+      return parsed;
+    }
+  }catch(e){}
+  return { comprados: [], data: todayStr(), estoque: {} };
+}
+
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+}
+
+let state = loadState();
+
+if(state.data !== todayStr()){
+  state.comprados = [];
+  state.data = todayStr();
+  saveState();
+}
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+let filtroCategoria = "Todos";
+let busca = "";
+let indice = 0;
+
+const categorias = ["Todos", ...new Set(INSUMOS.map(i => i.cat))];
+
+function getFiltrados(){
+  let r = INSUMOS;
+  if(filtroCategoria !== "Todos") r = r.filter(i => i.cat === filtroCategoria);
+  if(busca) r = r.filter(i => i.prod.toLowerCase().includes(busca.toLowerCase()));
+  return r.filter(i => !state.comprados.includes(i.id));
+}
+
+function renderChips(){
+  const el = document.getElementById("chips");
+  el.innerHTML = "";
+  categorias.forEach(cat => {
+    const chip = document.createElement("button");
+    chip.className = "chip" + (filtroCategoria === cat ? " active" : "");
+    chip.textContent = cat;
+    chip.onclick = () => { filtroCategoria = cat; indice = 0; render(); };
+    el.appendChild(chip);
+  });
+}
+
+function renderStats(){
+  const total = INSUMOS.length;
+  const comprados = state.comprados.length;
+  const pct = Math.round((comprados/total)*100);
+  document.getElementById("statComprados").textContent = comprados;
+  document.getElementById("statRestam").textContent = total - comprados;
+  document.getElementById("statPct").textContent = pct + "%";
+  document.getElementById("progressFill").style.width = pct + "%";
+}
+
+function marcarComprado(id){
+  state.comprados.push(id);
+  saveState();
+  render();
+}
+
+function desfazerUltimo(){
+  state.comprados.pop();
+  saveState();
+  render();
+}
+
+function salvarEstoque(id, valor){
+  const qtd = parseFloat(valor);
+  if(isNaN(qtd) || qtd < 0) return false;
+  state.estoque[id] = { qtd: qtd, atualizadoEm: new Date().toISOString() };
+  saveState();
+  return true;
+}
+
+function formatarData(iso){
+  const d = new Date(iso);
+  const dia = String(d.getDate()).padStart(2,"0");
+  const mes = String(d.getMonth()+1).padStart(2,"0");
+  return dia + "/" + mes;
+}
+
+function resetarTudo(){
+  state.comprados = [];
+  state.data = todayStr();
+  saveState();
+  filtroCategoria = "Todos";
+  busca = "";
+  document.getElementById("busca").value = "";
+  indice = 0;
+  render();
+}
+
+function renderStage(){
+  const stage = document.getElementById("stage");
+  const filtrados = getFiltrados();
+
+  if(filtrados.length === 0){
+    const totalComprados = state.comprados.length;
+    const todosComprados = totalComprados === INSUMOS.length;
+
+    if(todosComprados){
+      stage.innerHTML = `
+        <div class="empty">
+          <div class="big">✓</div>
+          <p>Lista concluída! Todos os ${INSUMOS.length} insumos foram comprados.</p>
+          <button class="btn-reset" id="btnReset">Começar nova lista</button>
+        </div>`;
+      document.getElementById("btnReset").onclick = resetarTudo;
+    } else {
+      stage.innerHTML = `
+        <div class="empty">
+          <div class="big">—</div>
+          <p>Nenhum produto encontrado com esse filtro.</p>
+          <button class="btn-reset" id="btnClear">Limpar filtros</button>
+        </div>`;
+      document.getElementById("btnClear").onclick = () => {
+        filtroCategoria = "Todos"; busca = "";
+        document.getElementById("busca").value = "";
+        indice = 0; render();
+      };
+    }
+    return;
+  }
+
+  if(indice >= filtrados.length) indice = 0;
+  const item = filtrados[indice];
+  const registroAtual = state.estoque[item.id];
+
+  stage.innerHTML = `
+    <div class="card">
+      <span class="cat-pill">${item.cat}</span>
+      <p class="prod-name">${item.prod}</p>
+      <div class="stock-row">
+        <input type="number" inputmode="decimal" min="0" step="0.1" class="stock-input" id="estoqueInput" placeholder="Qtd. em estoque" value="${registroAtual ? registroAtual.qtd : ''}">
+        <button class="btn-save-stock" id="btnSalvarEstoque" aria-label="Salvar estoque">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        </button>
+      </div>
+      <p class="estoque-info" id="estoqueInfo">${registroAtual ? "Registrado: " + registroAtual.qtd + " em " + formatarData(registroAtual.atualizadoEm) : "Nenhum estoque registrado ainda"}</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-skip" id="btnSkip">Pular</button>
+      <button class="btn btn-buy" id="btnBuy">Comprado</button>
+    </div>
+    ${state.comprados.length > 0 ? '<button class="btn-undo" id="btnUndo">Desfazer última compra</button>' : ''}
+  `;
+
+  document.getElementById("btnSkip").onclick = () => {
+    indice = (indice + 1) % filtrados.length;
+    render();
+  };
+  document.getElementById("btnBuy").onclick = () => marcarComprado(item.id);
+  document.getElementById("btnSalvarEstoque").onclick = () => {
+    const input = document.getElementById("estoqueInput");
+    const ok = salvarEstoque(item.id, input.value);
+    const info = document.getElementById("estoqueInfo");
+    if(ok){
+      const reg = state.estoque[item.id];
+      info.textContent = "Registrado: " + reg.qtd + " em " + formatarData(reg.atualizadoEm);
+      info.classList.add("saved");
+      setTimeout(() => info.classList.remove("saved"), 1200);
+    } else {
+      info.textContent = "Informe uma quantidade válida";
+    }
+  };
+  const undoBtn = document.getElementById("btnUndo");
+  if(undoBtn) undoBtn.onclick = desfazerUltimo;
+}
+
+function render(){
+  renderChips();
+  renderStats();
+  renderStage();
+}
+
+document.getElementById("busca").addEventListener("input", (e) => {
+  busca = e.target.value;
+  indice = 0;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
