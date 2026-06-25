@@ -156,7 +156,7 @@
   }
   .actions{
     display:flex;
-    gap:12px;
+    gap:8px;
     margin-top:20px;
   }
   button{
@@ -168,12 +168,13 @@
     flex:1;
     height:60px;
     border-radius:16px;
-    font-size:17px;
+    font-size:15px;
     font-weight:700;
     display:flex;
     align-items:center;
     justify-content:center;
-    gap:8px;
+    gap:6px;
+    padding:0 4px;
   }
   .btn-skip{
     background:var(--surface);
@@ -181,6 +182,12 @@
     color:var(--ink-soft);
   }
   .btn-skip:active{background:var(--bg);}
+  .btn-next{
+    background:var(--tomato-soft);
+    border:1px solid var(--tomato-soft);
+    color:var(--tomato);
+  }
+  .btn-next:active{background:#F5D5C0;}
   .btn-buy{
     background:var(--basil);
     color:#fff;
@@ -519,6 +526,12 @@ function adicionarALista(id){
   render();
 }
 
+function avancarSemComprar(id){
+  state.comprados.push(id);
+  saveState();
+  render();
+}
+
 function desfazerUltimo(){
   const lastId = state.comprados.pop();
   if(lastId !== undefined){
@@ -606,6 +619,7 @@ function renderStage(){
     </div>
     <div class="actions">
       <button class="btn btn-skip" id="btnSkip">Pular</button>
+      <button class="btn btn-next" id="btnNext">Próximo</button>
       <button class="btn btn-buy" id="btnBuy">Comprar</button>
     </div>
     ${state.comprados.length > 0 ? '<button class="btn-undo" id="btnUndo">Desfazer última compra</button>' : ''}
@@ -615,6 +629,7 @@ function renderStage(){
     indice = (indice + 1) % filtrados.length;
     render();
   };
+  document.getElementById("btnNext").onclick = () => avancarSemComprar(item.id);
   document.getElementById("btnBuy").onclick = () => adicionarALista(item.id);
   document.getElementById("btnSalvarEstoque").onclick = () => {
     const input = document.getElementById("estoqueInput");
