@@ -464,7 +464,11 @@ if(state.data !== todayStr()){
 }
 
 function saveState(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){
+    console.warn("Não foi possível salvar localmente:", e);
+  }
 }
 
 let filtroCategoria = "Todos";
@@ -611,7 +615,7 @@ function renderStage(){
     indice = (indice + 1) % filtrados.length;
     render();
   };
-  document.getElementById("btnBuy").onclick = () => marcarComprado(item.id);
+  document.getElementById("btnBuy").onclick = () => adicionarALista(item.id);
   document.getElementById("btnSalvarEstoque").onclick = () => {
     const input = document.getElementById("estoqueInput");
     const ok = salvarEstoque(item.id, input.value);
